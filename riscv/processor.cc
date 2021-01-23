@@ -21,7 +21,18 @@
 #define STATE state
 
 processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
-                         uint32_t id, bool halt_on_reset)
+                         uint32_t id,
+#ifdef QUEST
+                         QuESTEnv *env,
+			 uint8_t nqubits,
+			 uint8_t nqregisters,
+			 bool gnuradio,
+			 const char *sendip,
+			 const char *recvip,
+			 size_t sendport,
+			 size_t rcvport,
+#endif
+                         bool halt_on_reset)
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset), last_pc(1), executions(1)
 {
@@ -30,6 +41,30 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   parse_varch_string(varch);
   register_base_instructions();
   mmu = new mmu_t(sim, this);
+#ifdef QUEST
+  if (env != NULL) {
+    this->env = env;
+    this->nqubits = nqubits;
+    this->nqregisters = nqregisters;
+    this->gnuradio = gnuradio;
+    this->sendip = sendip;
+    this->recvip = recvip;
+    this->sendport = sendport;
+    this->rcvport = rcvport;
+    // TODO: for testing.
+    qubits = createQureg(nqubits * (nqregisters + 1), *env);
+    initZeroState(qubits);
+
+    // 32bit qbit registors
+    printf("#qregister size : %d\n", nqregisters);
+    printf("#qbit size      : %d\n", nqubits);
+    // for (int i = 0; i < nqregisters; i++) {
+    //   Qureg q = createQureg(nqubits, *env);
+    //   initZeroState(q);
+    //   qregs.push_back(q);
+    // }
+  }
+#endif
 
   disassembler = new disassembler_t(max_xlen);
   if (ext)
@@ -52,6 +87,17 @@ processor_t::~processor_t()
 
   delete mmu;
   delete disassembler;
+#ifdef QUEST
+  // TODO: for testing.
+  if (env != NULL) {
+    destroyQureg(qubits, *env);
+
+    // for (unsigned int i = 0; i < qregs.size(); i++) {
+    //   destroyQureg(qregs[i], *env);
+    // }
+    // qregs.clear();
+  }
+#endif
 }
 
 static void bad_isa_string(const char* isa)

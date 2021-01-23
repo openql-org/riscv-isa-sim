@@ -63,11 +63,14 @@ install_exes_dir := $(INSTALLDIR)/bin
 #-------------------------------------------------------------------------
 # List of subprojects
 #-------------------------------------------------------------------------
+QUEST_INC     := ../../QuEST/QuEST/include/
+QUEST_RUNLIB  := -L../../QuEST/build/QuEST/
+QUEST_LIB     := -lQuEST -loscpack
 
 sprojs         := @subprojects@
 sprojs_enabled := @subprojects_enabled@
 
-sprojs_include := -I. -I$(src_dir) $(addprefix -I$(src_dir)/, $(sprojs_enabled))
+sprojs_include := -I. -I$(QUEST_INC) -I$(src_dir) $(addprefix -I$(src_dir)/, $(sprojs_enabled))
 VPATH := $(addprefix $(src_dir)/, $(sprojs_enabled))
 
 #-------------------------------------------------------------------------
@@ -93,8 +96,8 @@ COMPILE_C     := $(CC) -MMD -MP $(CPPFLAGS) $(CFLAGS) \
 
 comma := ,
 LD            := $(CXX)
-LDFLAGS       := @LDFLAGS@
-LIBS          := @LIBS@
+LDFLAGS       := @LDFLAGS@ $(QUEST_RUNLIB)
+LIBS          := @LIBS@ $(QUEST_LIB)
 LINK          := $(LD) -L. $(LDFLAGS) -Wl,-rpath,$(install_libs_dir) $(patsubst -L%,-Wl$(comma)-rpath$(comma)%,$(filter -L%,$(LDFLAGS)))
 
 # Library creation

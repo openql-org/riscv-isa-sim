@@ -11,6 +11,9 @@
 #include <map>
 #include <cassert>
 #include "debug_rom_defines.h"
+#ifdef QUEST
+#include "QuEST.h"
+#endif
 
 class processor_t;
 class mmu_t;
@@ -285,6 +288,16 @@ class processor_t : public abstract_device_t
 {
 public:
   processor_t(const char* isa, const char* varch, simif_t* sim, uint32_t id,
+#ifdef QUEST
+              QuESTEnv *env,
+	      uint8_t nqubits,
+	      uint8_t nqregisters,
+	      bool gnuradio,
+	      const char *sendip,
+	      const char *recvip,
+	      size_t sendport,
+	      size_t rcvport,
+#endif
               bool halt_on_reset=false);
   ~processor_t();
 
@@ -296,6 +309,19 @@ public:
   reg_t get_csr(int which);
   mmu_t* get_mmu() { return mmu; }
   state_t* get_state() { return &state; }
+
+#ifdef QUEST
+  QuESTEnv *get_quenv() { return env; }
+  uint8_t get_nqubits() { return nqubits; }
+  uint8_t get_nqregisters() { return nqregisters; }
+  bool get_gnuradio() { return gnuradio; }
+  size_t get_osc_sendport() { return sendport; }
+  size_t get_osc_recvport() { return rcvport; }
+  const char *get_osc_sendip() { return sendip; }
+  const char *get_osc_recvip() { return recvip; }
+  Qureg get_qubits() { return qubits; }
+#endif
+
   unsigned get_xlen() { return xlen; }
   unsigned get_max_xlen() { return max_xlen; }
   std::string get_isa_string() { return isa_string; }
@@ -419,6 +445,21 @@ public:
 
 private:
   simif_t* sim;
+#ifdef QUEST
+  // 32bit qubit register.
+  Qureg qubits;
+
+  // TODO: replace vars, qubit => qubits(vector) ?
+  // std::vector<Qureg> qregs;
+  QuESTEnv *env = NULL;
+  uint8_t nqubits;
+  uint8_t nqregisters;
+  bool gnuradio;
+  const char *sendip;
+  const char *recvip;
+  size_t sendport;
+  size_t rcvport;
+#endif
   mmu_t* mmu; // main memory is always accessed via the mmu
   extension_t* ext;
   disassembler_t* disassembler;

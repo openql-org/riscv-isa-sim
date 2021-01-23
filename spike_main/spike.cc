@@ -23,6 +23,13 @@ static void help(int exit_code = 1)
   fprintf(stderr, "  -m<n>                 Provide <n> MiB of target memory [default 2048]\n");
   fprintf(stderr, "  -m<a:m,b:n,...>       Provide memory regions of size m and n bytes\n");
   fprintf(stderr, "                          at base addresses a and b (with 4 KiB alignment)\n");
+  fprintf(stderr, "  -q<n>                 Qbit num\n");
+  fprintf(stderr, "  -r<n>                 Qbit Register num\n");
+  fprintf(stderr, "  -k                    Run on GNU Radio(default is spike emulator)\n");
+  fprintf(stderr, "  -i<address>           OSC send ip address \n");
+  fprintf(stderr, "  -f<address>           OSC from ip address \n");
+  fprintf(stderr, "  -s<port>              OSC send port \n");
+  fprintf(stderr, "  -o<port>              OSC recive port \n");
   fprintf(stderr, "  -d                    Interactive debug mode\n");
   fprintf(stderr, "  -g                    Track histogram of PCs\n");
   fprintf(stderr, "  -l                    Generate a log of execution\n");
@@ -124,6 +131,13 @@ int main(int argc, char** argv)
     .support_haltgroups = true
   };
   std::vector<int> hartids;
+  bool gnuradio = false;
+  const char *sendip = "localhost";
+  const char *recvip = "localhost";
+  size_t sendport = 7000;
+  size_t rcvport = 7001;
+  uint8_t nqbits = 1;
+  uint16_t nregisters = QREGISTERS;
 
   auto const hartids_parser = [&](const char *s) {
     std::string const str(s);
@@ -145,6 +159,15 @@ int main(int argc, char** argv)
   parser.option('l', 0, 0, [&](const char* s){log = true;});
   parser.option('p', 0, 1, [&](const char* s){nprocs = atoi(s);});
   parser.option('m', 0, 1, [&](const char* s){mems = make_mems(s);});
+  parser.option('k', 0, 0, [&](const char* s){gnuradio = true;});
+  parser.option('i', 0, 1, [&](const char* s){sendip = s;});
+  parser.option('f', 0, 1, [&](const char* s){recvip = s;});
+  parser.option('s', 0, 1, [&](const char* s){sendport = atoi(s);});
+  parser.option('o', 0, 1, [&](const char* s){rcvport = atoi(s);});
+  parser.option('q', 0, 1, [&](const char* s){nqbits = atoi(s);});
+  parser.option('p', 0, 1, [&](const char* s){nprocs = atoi(s);});
+  parser.option('r', 0, 1, [&](const char* s){nregisters = atoi(s);});
+
   // I wanted to use --halted, but for some reason that doesn't work.
   parser.option('H', 0, 0, [&](const char* s){halted = true;});
   parser.option(0, "rbb-port", 1, [&](const char* s){use_rbb = true; rbb_port = atoi(s);});
@@ -191,7 +214,11 @@ int main(int argc, char** argv)
   if (!*argv1)
     help();
 
-  sim_t s(isa, varch, nprocs, halted, start_pc, mems, htif_args, std::move(hartids),
+  sim_t s(isa, varch, nprocs, halted,
+#ifdef QUEST
+      nqbits, nregisters, gnuradio, sendip, recvip, sendport, rcvport,
+#endif
+      start_pc, mems, htif_args, std::move(hartids),
       dm_config);
   std::unique_ptr<remote_bitbang_t> remote_bitbang((remote_bitbang_t *) NULL);
   std::unique_ptr<jtag_dtm_t> jtag_dtm(
