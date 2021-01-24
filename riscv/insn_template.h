@@ -7,3 +7,7 @@
 #include "specialize.h"
 #include "tracer.h"
 #include <assert.h>
+#include <oscpack/osc/OscOutboundPacketStream.h>
+#include <oscpack/ip/UdpSocket.h>
+#include <oscpack/osc/OscReceivedElements.h>
+#include <oscpack/osc/OscPacketListener.h>

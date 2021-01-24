@@ -123,6 +123,7 @@ public:
   uint64_t v_lmul() { return 1 << x(20, 2); }
   uint64_t v_sew() { return 1 << (x(22, 3) + 3); }
 
+  uint64_t k_qimm6() { return x(25, 6); }
 private:
   insn_bits_t b;
   uint64_t x(int lo, int len) { return (b >> lo) & ((insn_bits_t(1) << len)-1); }
@@ -158,6 +159,7 @@ private:
 #define RS1 READ_REG(insn.rs1())
 #define RS2 READ_REG(insn.rs2())
 #define RS3 READ_REG(insn.rs3())
+#define QIMM6 READ_REG(insn.k_qimm6())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
 
 #ifndef RISCV_ENABLE_COMMITLOG

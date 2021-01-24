@@ -236,6 +236,8 @@ struct state_t
   reg_t satp;
   reg_t scause;
 
+  reg_t qstatus;
+  
   reg_t dpc;
   reg_t dscratch;
   dcsr_t dcsr;
@@ -459,6 +461,7 @@ private:
   const char *recvip;
   size_t sendport;
   size_t rcvport;
+  reg_t qstatus;
 #endif
   mmu_t* mmu; // main memory is always accessed via the mmu
   extension_t* ext;
