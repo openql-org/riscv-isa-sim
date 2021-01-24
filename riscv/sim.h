@@ -19,7 +19,7 @@ extern "C" {
 #include "QuEST.h"
 }
 #endif
-#define QREGISTERS 32
+#define QREGISTERS 4
 
 class mmu_t;
 class remote_bitbang_t;
