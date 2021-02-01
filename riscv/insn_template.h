@@ -7,7 +7,9 @@
 #include "specialize.h"
 #include "tracer.h"
 #include <assert.h>
+#ifdef QUEST
 #include <oscpack/osc/OscOutboundPacketStream.h>
 #include <oscpack/ip/UdpSocket.h>
 #include <oscpack/osc/OscReceivedElements.h>
 #include <oscpack/osc/OscPacketListener.h>
+#endif /* QUEST */

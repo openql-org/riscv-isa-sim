@@ -16,6 +16,12 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#ifdef QUEST
+#include <oscpack/osc/OscOutboundPacketStream.h>
+#include <oscpack/ip/UdpSocket.h>
+#include <oscpack/osc/OscReceivedElements.h>
+#include <oscpack/osc/OscPacketListener.h>
+#endif /* QUEST */
 
 #undef STATE
 #define STATE state
@@ -42,6 +48,7 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
   register_base_instructions();
   mmu = new mmu_t(sim, this);
 #ifdef QUEST
+#define OUT_BUF_SIZE 1024
   if (env != NULL) {
     this->env = env;
     this->nqubits = nqubits;
@@ -54,7 +61,16 @@ processor_t::processor_t(const char* isa, const char* varch, simif_t* sim,
     // TODO: for testing.
     qubits = createQureg(nqubits * (nqregisters + 1), *env);
     initZeroState(qubits);
-
+    if (gnuradio) {
+      UdpTransmitSocket transmitSocket( IpEndpointName(sendip, sendport ) );
+      char buffer[OUT_BUF_SIZE];
+      osc::OutboundPacketStream p( buffer, OUT_BUF_SIZE );
+      p << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/Init" )
+        << (int)nqubits*2 << (int)nqregisters*2 << osc::EndMessage
+        << osc::EndBundle;
+      transmitSocket.Send( p.Data(), p.Size() );
+    }
     // 32bit qbit registors
     printf("#qregister size : %d\n", nqregisters);
     printf("#qbit size      : %d\n", nqubits);

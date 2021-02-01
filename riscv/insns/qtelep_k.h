@@ -80,69 +80,76 @@ if (gnuradio) {
           << osc::EndBundle;
       }
     }
+  } else {
+      p << osc::BeginBundleImmediate
+        << osc::BeginMessage( "/Barrier" ) << osc::EndMessage
+        << osc::EndBundle;
   }
   transmitSocket.Send( p.Data(), p.Size() );
-}
 
-Qureg qubits = p->get_qubits();
-if (rs1_num == 0 && rs2_num > 0 && rs2_num <= nqregisters) {
-  if (!qimm6_flag) {  // qimm6(30) == 1
-    for (uint8_t i = 0; i < nqubits ; i++ ) {
-      fprintf(stderr, "qbit_idx : %d\n", rs2_num * nqubits + i);
-      initZeroStateOfSingleQubit(qubits, rs2_num * nqubits + i);
-    } 
-  } else if (qimm6 >= 0 && qimm6 < nqubits) {
-    fprintf(stderr, "qbit_idx : %d\n", rs2_num * nqubits + qimm6);
-    initZeroStateOfSingleQubit(qubits, rs2_num * nqubits + qimm6);
-  } else {
-    // TODO: qimm6 error
-    fprintf(stderr, "out of order [qimm6]\n");
-    STATE.qstatus |= 1;
-  }
-} else if (rs1_num > 0 && rs1_num <= nqregisters && rs2_num > 0 && rs2_num <= nqregisters) {
-  if (!qimm6_flag) {  // qimm6(30) == 1
-    for (uint8_t i = 0; i < nqubits ; i++ ) {
-      uint32_t alice = rs1_num * nqubits + i;
-      uint32_t bob = rs2_num * nqubits + i;
-      fprintf(stderr, "qbit_idx_of_alice : %d\n", alice);
-      fprintf(stderr, "qbit_idx_of_bob   : %d\n", bob);
-      initZeroStateOfSingleQubit(qubits, i);  // initialize the ancilla
-      initZeroStateOfSingleQubit(qubits, bob);  // initialize the qubit of bob
-      hadamard(qubits, i);
-      controlledNot(qubits, i, bob);  // entangled between ancilla and bob
-      controlledNot(qubits, alice, i);
-      controlledNot(qubits, i, bob);
-      controlledNot(qubits, bob, alice);
-      hadamard(qubits,alice);
-      measure(qubits, alice);
-      measure(qubits, i);
-    }
-  } else {
-    if (qimm6 >= 0 && qimm6 < nqubits && target >=0 && target < nqubits) {
-      uint32_t alice = rs1_num * nqubits + target;
-      uint32_t bob = rs2_num * nqubits + qimm6;
-      fprintf(stderr, "qbit_idx_of_alice : %d\n", alice);
-      fprintf(stderr, "qbit_idx_of_bob   : %d\n", bob);
-      initZeroStateOfSingleQubit(qubits, qimm6);  // initialize the ancilla
-      initZeroStateOfSingleQubit(qubits, bob);  // initialize the qubit of bob
-      hadamard(qubits, qimm6);
-      controlledNot(qubits, qimm6, bob);  // entangled between ancilla and bob
-      controlledNot(qubits, alice, qimm6);
-      controlledNot(qubits, qimm6, bob);
-      controlledNot(qubits, bob, alice);
-      hadamard(qubits, alice);
-      measure(qubits, alice);
-      measure(qubits, qimm6);
+} else {
+
+  Qureg qubits = p->get_qubits();
+  if (rs1_num == 0 && rs2_num > 0 && rs2_num <= nqregisters) {
+    if (!qimm6_flag) {  // qimm6(30) == 1
+      for (uint8_t i = 0; i < nqubits ; i++ ) {
+        fprintf(stderr, "qbit_idx : %d\n", rs2_num * nqubits + i);
+        initZeroStateOfSingleQubit(qubits, rs2_num * nqubits + i);
+      } 
+    } else if (qimm6 >= 0 && qimm6 < nqubits) {
+      fprintf(stderr, "qbit_idx : %d\n", rs2_num * nqubits + qimm6);
+      initZeroStateOfSingleQubit(qubits, rs2_num * nqubits + qimm6);
     } else {
       // TODO: qimm6 error
       fprintf(stderr, "out of order [qimm6]\n");
       STATE.qstatus |= 1;
     }
+  } else if (rs1_num > 0 && rs1_num <= nqregisters && rs2_num > 0 && rs2_num <= nqregisters) {
+    if (!qimm6_flag) {  // qimm6(30) == 1
+      for (uint8_t i = 0; i < nqubits ; i++ ) {
+        uint32_t alice = rs1_num * nqubits + i;
+        uint32_t bob = rs2_num * nqubits + i;
+        fprintf(stderr, "qbit_idx_of_alice : %d\n", alice);
+        fprintf(stderr, "qbit_idx_of_bob   : %d\n", bob);
+        initZeroStateOfSingleQubit(qubits, i);  // initialize the ancilla
+        initZeroStateOfSingleQubit(qubits, bob);  // initialize the qubit of bob
+        hadamard(qubits, i);
+        controlledNot(qubits, i, bob);  // entangled between ancilla and bob
+        controlledNot(qubits, alice, i);
+        controlledNot(qubits, i, bob);
+        controlledNot(qubits, bob, alice);
+        hadamard(qubits,alice);
+        measure(qubits, alice);
+        measure(qubits, i);
+      }
+    } else {
+      if (qimm6 >= 0 && qimm6 < nqubits && target >=0 && target < nqubits) {
+        uint32_t alice = rs1_num * nqubits + target;
+        uint32_t bob = rs2_num * nqubits + qimm6;
+        fprintf(stderr, "qbit_idx_of_alice : %d\n", alice);
+        fprintf(stderr, "qbit_idx_of_bob   : %d\n", bob);
+        initZeroStateOfSingleQubit(qubits, qimm6);  // initialize the ancilla
+        initZeroStateOfSingleQubit(qubits, bob);  // initialize the qubit of bob
+        hadamard(qubits, qimm6);
+        controlledNot(qubits, qimm6, bob);  // entangled between ancilla and bob
+        controlledNot(qubits, alice, qimm6);
+        controlledNot(qubits, qimm6, bob);
+        controlledNot(qubits, bob, alice);
+        hadamard(qubits, alice);
+        measure(qubits, alice);
+        measure(qubits, qimm6);
+      } else {
+        // TODO: qimm6 error
+        fprintf(stderr, "out of order [qimm6]\n");
+        STATE.qstatus |= 1;
+      }
+    }
+  } else {
+    // TODO: rs1 error
+    fprintf(stderr, "out of order [rs1 or rs2]\n");
+    STATE.qstatus |= 1;
   }
-} else {
-  // TODO: rs1 error
-  fprintf(stderr, "out of order [rs1 or rs2]\n");
-  STATE.qstatus |= 1;
+
 }
 serialize();
 #endif

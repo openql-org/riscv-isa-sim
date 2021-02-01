@@ -34,34 +34,37 @@ if (gnuradio) {
           << osc::EndBundle;
       }
     }
-  transmitSocket.Send( p.Data(), p.Size() );
   }
-}
+  transmitSocket.Send( p.Data(), p.Size() );
 
-Qureg qubits = p->get_qubits();
-if (rs1_num > 0 && rs1_num <= nqregisters) {
-  if (rs2_num == 0) {
-    if (qimm6 >= 0 && qimm6 < nqubits) {
-      fprintf(stderr, "qbit_idx : %d\n", rs1_num * nqubits + qimm6);
-      sdgGate(qubits, rs1_num * nqubits + qimm6);
+} else {
+
+  Qureg qubits = p->get_qubits();
+  if (rs1_num > 0 && rs1_num <= nqregisters) {
+    if (rs2_num == 0) {
+      if (qimm6 >= 0 && qimm6 < nqubits) {
+        fprintf(stderr, "qbit_idx : %d\n", rs1_num * nqubits + qimm6);
+        sdgGate(qubits, rs1_num * nqubits + qimm6);
+      } else {
+        // TODO: qimm6 error
+        fprintf(stderr, "out of order [qimm6]\n");
+        STATE.qstatus |= 1;
+      }
     } else {
-      // TODO: qimm6 error
-      fprintf(stderr, "out of order [qimm6]\n");
-      STATE.qstatus |= 1;
-    }
-  } else {
-    fprintf(stderr, "rs2 : %x\n", RS2);
-    for (uint8_t i = 0; i < nqubits ; i++ ) {
-      if ( (( RS2 >> i ) & 0x1) == 1 ) {
-        fprintf(stderr, "qbit_idx : %d / %d\n", rs1_num * nqubits + i, i);
-        sdgGate(qubits, rs1_num * nqubits + i);
+      fprintf(stderr, "rs2 : %x\n", RS2);
+      for (uint8_t i = 0; i < nqubits ; i++ ) {
+        if ( (( RS2 >> i ) & 0x1) == 1 ) {
+          fprintf(stderr, "qbit_idx : %d / %d\n", rs1_num * nqubits + i, i);
+          sdgGate(qubits, rs1_num * nqubits + i);
+        }
       }
     }
+  } else {
+    // TODO: rs1 error
+    fprintf(stderr, "out of order [rs1]\n");
+    STATE.qstatus |= 1;
   }
-} else {
-  // TODO: rs1 error
-  fprintf(stderr, "out of order [rs1]\n");
-  STATE.qstatus |= 1;
+
 }
 serialize();
 #endif

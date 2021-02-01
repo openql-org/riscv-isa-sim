@@ -33,42 +33,45 @@ if (gnuradio) {
         << osc::EndBundle;
       }
     }
-  transmitSocket.Send( p.Data(), p.Size() );
   }
-}
+  transmitSocket.Send( p.Data(), p.Size() );
 
-Qureg qubits = p->get_qubits();
-if (rs1_num > 0 && rs1_num <= nqregisters && rs2_num > 0 && rs2_num <= nqregisters) {
-  if (qimm6_flag) {
-    if (qimm6 >= 0 && qimm6 < nqubits && target >=0 && target < nqubits) {
-      uint32_t ctrl = rs2_num * nqubits + qimm6;
-      uint32_t targ = rs1_num * nqubits + target;
-      if( ctrl != targ ) {
-        fprintf(stderr, "qbit_idx_of_control : %d\n", ctrl);
-        fprintf(stderr, "qbit_idx_of_target  : %d\n", targ);
-        controlledNot(qubits, ctrl, targ);
+} else {
+
+  Qureg qubits = p->get_qubits();
+  if (rs1_num > 0 && rs1_num <= nqregisters && rs2_num > 0 && rs2_num <= nqregisters) {
+    if (qimm6_flag) {
+      if (qimm6 >= 0 && qimm6 < nqubits && target >=0 && target < nqubits) {
+        uint32_t ctrl = rs2_num * nqubits + qimm6;
+        uint32_t targ = rs1_num * nqubits + target;
+        if( ctrl != targ ) {
+          fprintf(stderr, "qbit_idx_of_control : %d\n", ctrl);
+          fprintf(stderr, "qbit_idx_of_target  : %d\n", targ);
+          controlledNot(qubits, ctrl, targ);
+        } else {
+          fprintf(stderr, "the target equals the control.\n");
+          STATE.qstatus |= 1;
+        }
       } else {
-        fprintf(stderr, "the target equals the control.\n");
+        // TODO: qimm6 error
+        fprintf(stderr, "out of order [qimm6 or rd]\n");
         STATE.qstatus |= 1;
       }
     } else {
-      // TODO: qimm6 error
-      fprintf(stderr, "out of order [qimm6 or rd]\n");
-      STATE.qstatus |= 1;
+      for (uint8_t i = 0; i < nqubits ; i++ ) {
+        uint32_t ctrl = rs2_num * nqubits + i;
+        uint32_t targ = rs1_num * nqubits + i;
+        fprintf(stderr, "qbit_idx_of_control : %d\n", ctrl);
+        fprintf(stderr, "qbit_idx_of_target  : %d\n", targ);
+        controlledNot(qubits, ctrl, targ);
+      }
     }
   } else {
-    for (uint8_t i = 0; i < nqubits ; i++ ) {
-      uint32_t ctrl = rs2_num * nqubits + i;
-      uint32_t targ = rs1_num * nqubits + i;
-      fprintf(stderr, "qbit_idx_of_control : %d\n", ctrl);
-      fprintf(stderr, "qbit_idx_of_target  : %d\n", targ);
-      controlledNot(qubits, ctrl, targ);
-    }
+    // TODO: rs1 error
+    fprintf(stderr, "out of order [rs1]\n");
+    STATE.qstatus |= 1;
   }
-} else {
-  // TODO: rs1 error
-  fprintf(stderr, "out of order [rs1]\n");
-  STATE.qstatus |= 1;
+
 }
 serialize();
 #endif
